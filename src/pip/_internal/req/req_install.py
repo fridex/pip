@@ -4,9 +4,11 @@
 import functools
 import logging
 import os
-import shutil
+import hashlib
 import sys
 import uuid
+import json
+import shutil
 import zipfile
 from enum import Enum
 from optparse import Values
@@ -31,6 +33,7 @@ from pip._internal.metadata import (
 )
 from pip._internal.metadata.base import FilesystemWheel
 from pip._internal.models.direct_url import DirectUrl
+from pip._internal.models.provenance import Provenance
 from pip._internal.models.link import Link
 from pip._internal.operations.build.metadata import generate_metadata
 from pip._internal.operations.build.metadata_editable import generate_editable_metadata
@@ -356,6 +359,11 @@ class InstallRequirement:
             kind=tempdir_kinds.REQ_BUILD,
             globally_managed=True,
         ).path
+
+    def _record_provenance(self, directory) -> None:
+        """Record provenance of the installed package."""
+        provenance_file = os.path.join(directory, "provenance.json")
+        print(provenance_file, " - ", json.dumps({"url": self.link, "sha256": hashlib.sha256(self.local_file_path).hexdigest}))
 
     def _set_requirement(self) -> None:
         """Set requirement after generating metadata."""
@@ -764,6 +772,11 @@ class InstallRequirement:
             prefix=prefix,
         )
 
+        provenance = Provenance.create(
+            url=self.download_info.url,
+            file_path=self.local_file_path,
+        )
+
         global_options = global_options if global_options is not None else []
         if self.editable and not self.is_wheel:
             install_editable_legacy(
@@ -801,6 +814,7 @@ class InstallRequirement:
                 pycompile=pycompile,
                 warn_script_location=warn_script_location,
                 direct_url=direct_url,
+                provenance=provenance,
                 requested=self.user_supplied,
             )
             self.install_succeeded = True

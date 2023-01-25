@@ -48,6 +48,7 @@ from pip._internal.metadata import (
     get_wheel_distribution,
 )
 from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME, DirectUrl
+from pip._internal.models.provenance import PROVENANCE_METADATA_NAME, Provenance
 from pip._internal.models.scheme import SCHEME_KEYS, Scheme
 from pip._internal.utils.filesystem import adjacent_tmp_file, replace
 from pip._internal.utils.misc import captured_stdout, ensure_dir, hash_file, partition
@@ -435,6 +436,7 @@ def _install_wheel(
     pycompile: bool = True,
     warn_script_location: bool = True,
     direct_url: Optional[DirectUrl] = None,
+    provenance: Optional[Provenance] = None,
     requested: bool = False,
 ) -> None:
     """Install a wheel.
@@ -677,6 +679,14 @@ def _install_wheel(
             direct_url_file.write(direct_url.to_json().encode("utf-8"))
         generated.append(direct_url_path)
 
+    # Record provenance of the installed package
+    if provenance is not None:
+        provenance_path = os.path.join(dest_info_dir, PROVENANCE_METADATA_NAME)
+        print("----", provenance_path)
+        with _generate_file(provenance_path) as provenance_file:
+            provenance_file.write(provenance.to_json().encode("utf-8"))
+        generated.append(provenance_path)
+
     # Record the REQUESTED file
     if requested:
         requested_path = os.path.join(dest_info_dir, "REQUESTED")
@@ -722,6 +732,7 @@ def install_wheel(
     pycompile: bool = True,
     warn_script_location: bool = True,
     direct_url: Optional[DirectUrl] = None,
+    provenance: Optional[Provenance] = None,
     requested: bool = False,
 ) -> None:
     with ZipFile(wheel_path, allowZip64=True) as z:
@@ -734,5 +745,6 @@ def install_wheel(
                 pycompile=pycompile,
                 warn_script_location=warn_script_location,
                 direct_url=direct_url,
+                provenance=provenance,
                 requested=requested,
             )
