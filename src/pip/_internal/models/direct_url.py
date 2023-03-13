@@ -15,7 +15,7 @@ __all__ = [
 T = TypeVar("T")
 
 DIRECT_URL_METADATA_NAME = "direct_url.json"
-PROVENANCE_URL_METADATA_NAME = "provenance_url.json"
+PROVENANCE_URL_METADATA_NAME = DIRECT_URL_METADATA_NAME
 ENV_VAR_RE = re.compile(r"^\$\{[A-Za-z0-9-_]+\}(:\$\{[A-Za-z0-9-_]+\})?$")
 
 
