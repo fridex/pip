@@ -868,10 +868,11 @@ class InstallRequirement:
             self.req.name,
             self.local_file_path,
             scheme=scheme,
+            download_info=self.download_info,
+            is_direct=self.is_direct,
             req_description=str(self.req),
             pycompile=pycompile,
             warn_script_location=warn_script_location,
-            direct_url=self.download_info if self.is_direct else None,
             requested=self.user_supplied,
         )
         self.install_succeeded = True
